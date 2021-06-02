@@ -24,7 +24,26 @@ enum mcu_gpios {
     MCU_GPIO_VALVE,
     MCU_GPIO_ROTATE_SENSOR,
     MCU_GPIO_PRESSURE_SENSOR,
+    MCU_GPIO_LED_GREEN,
+    MCU_GPIO_LED_RED,
 };
+
+enum leds {
+    LED_GREEN,
+    LED_RED,
+};
+
+enum led_indicator_state {
+    LI_OFF,
+    LI_STARTING_FIRST,
+    LI_STARTING_SECOND,
+    LI_RUNNING,
+    LI_WAITING,
+    LI_STARTING_ERROR,
+    LI_RUN_ERROR,
+};
+
+void led_indicator_set_state(enum led_indicator_state state);
 
 extern struct gpio gpio_list[];
 

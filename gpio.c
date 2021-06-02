@@ -23,7 +23,7 @@ gpio_set_direction(struct gpio *gpio, enum gpio_direction dir)
  * @param mode - ON или OFF
  */
 void
-gpio_set_state(struct gpio *gpio, u8 mode)
+gpio_set_value(struct gpio *gpio, u8 mode)
 {
     if (mode)
         gpio->port_addr[0] |= (1 << gpio->pin);
@@ -39,7 +39,7 @@ gpio_set_state(struct gpio *gpio, u8 mode)
  * @param gpio - GPIO порт
  */
 int
-gpio_get_state(struct gpio *gpio)
+gpio_get_value(struct gpio *gpio)
 {
     return ((gpio->pin_addr[0] & (1 << gpio->pin)) > 0);
 }
@@ -54,6 +54,6 @@ gpio_init_list(struct gpio *gpio_list)
     struct gpio *gpio;
     for (gpio = gpio_list; gpio->direction_addr != NULL; gpio++) {
         gpio_set_direction(gpio, gpio->direction);
-        gpio_set_state(gpio, gpio->output_state);
+        gpio_set_value(gpio, gpio->output_state);
     }
 }

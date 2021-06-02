@@ -1,5 +1,5 @@
-#ifndef LED_LIB_H
-#define LED_LIB_H
+#ifndef GPIO_H
+#define GPIO_H
 
 #include "types.h"
 
@@ -24,10 +24,10 @@ void
 gpio_set_direction(struct gpio *gpio, u8 mode);
 
 void
-gpio_set_state(struct gpio *gpio, u8 mode);
+gpio_set_value(struct gpio *gpio, u8 mode);
 
 int
-gpio_get_state(struct gpio *gpio);
+gpio_get_value(struct gpio *gpio);
 
 
 #endif

@@ -104,7 +104,7 @@ void led_indicator_set_state(enum led_indicator_state state)
 
     case LI_RUN_ERROR:
         led_off(leds + LED_GREEN);
-        led_set_blink(leds + LED_RED, 500, 0, 0);
+        led_set_blink(leds + LED_RED, 1000, 300, 0);
         break;
     }
 }
@@ -131,8 +131,8 @@ init_hw(void)
     usart_init();
     init_gpio_int0();
     sys_timer_init();
-    led_register(leds + LED_GREEN, gpio_list + MCU_GPIO_LED_GREEN);
-    led_register(leds + LED_RED, gpio_list + MCU_GPIO_LED_RED);
+    led_register(leds + LED_GREEN, gpio_list + MCU_GPIO_LED_GREEN, 0);
+    led_register(leds + LED_RED, gpio_list + MCU_GPIO_LED_RED, 0);
     wdt_enable(WDTO_2S); // Включаем вэтчдог
     sei();
 }

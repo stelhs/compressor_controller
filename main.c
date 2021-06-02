@@ -36,7 +36,7 @@ void gpio_int0_cb(void)
 
 static bool is_motor_rotate(void)
 {
-    if (motor_rotate_freq < 5)
+    if (motor_rotate_freq < 25)
         return FALSE;
     return TRUE;
 }
@@ -75,24 +75,9 @@ static void debug_console(void)
     key = usart_get();
     switch (key) {
     case 'a':
-        printf("motor run\r\n");
-        motor_run();
+        printf("motor_rotate_freq = %d\r\n", motor_rotate_freq);
         break;
 
-    case 's':
-        printf("motor stop\r\n");
-        motor_stop();
-        break;
-
-    case 'd':
-        printf("valve open\r\n");
-        valve_open();
-        break;
-
-    case 'f':
-        printf("valve close\r\n");
-        valve_close();
-        break;
     }
 }
 
@@ -103,6 +88,10 @@ static int handle_high_pressure(void)
         motor_stop();
         valve_close();
         led_indicator_set_state(LI_WAITING);
+        TIMEOUT(3000) {
+            wdt_reset();
+        }
+
         return 1;
     }
     return 0;
@@ -110,20 +99,22 @@ static int handle_high_pressure(void)
 
 static int motor_start(void)
 {
-    static struct timeout start_timeout;
-    int attempts = 5;
     #define MOTOR_ROTATE_TIMEOUT 3000
+    #define MOTOR_START_ATTEMPTS_CNT 5
+
+    static struct timeout start_timeout;
+    int attempts = MOTOR_START_ATTEMPTS_CNT;
+
+    printf("motor starting...\r\n");
 
     led_indicator_set_state(LI_STARTING_FIRST);
 
-    printf("waiting 5000 ...\r\n");
-    TIMEOUT(5000) {
+    TIMEOUT(1000) {
         if (handle_high_pressure())
             return 0;
         wdt_reset();
     }
 
-    printf("motor starting...\r\n");
     timeout_start(&start_timeout, MOTOR_ROTATE_TIMEOUT);
     motor_run();
     valve_open();
@@ -132,7 +123,7 @@ static int motor_start(void)
         if (is_timeout_expire(&start_timeout)) {
             motor_stop();
             valve_close();
-            printf("timer expire, sleep 10000\r\n");
+            printf("Can't start motor\r\n");
             TIMEOUT(10000) {
                 if (handle_high_pressure())
                     return 0;
@@ -144,7 +135,8 @@ static int motor_start(void)
                 return -1;
             }
 
-            printf("attempts = %d\r\n", attempts);
+            printf("attempts = %d\r\n",
+                    MOTOR_START_ATTEMPTS_CNT - attempts);
             timeout_start(&start_timeout, MOTOR_ROTATE_TIMEOUT);
             valve_open();
             motor_run();
@@ -175,11 +167,11 @@ int main(void)
     sys_timer_add_handler(&sys_timer);
 
     printf("Init - ok\r\n");
-    led_indicator_set_state(LI_OFF);
+    led_indicator_set_state(LI_WAITING);
 
     for (;;) {
         wdt_reset();
-        //debug_console();
+        debug_console();
 
         if (!is_high_pressure() && !is_motor_running()) {
             rc = motor_start();

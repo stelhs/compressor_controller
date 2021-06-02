@@ -16,7 +16,7 @@ static void led_timer_handler(void *arg)
 	}
 
 	if (led->blink_counter == 1) {
-		gpio_set_value(led->gpio, 0);
+		gpio_set_value(led->gpio, !led->light_state);
 		led->timer_counter = 0;
 		led->blink_counter = 0;
 		led->state = 0;
@@ -24,11 +24,11 @@ static void led_timer_handler(void *arg)
 	}
 
 	if(led->state) {
-		gpio_set_value(led->gpio, 0);
+		gpio_set_value(led->gpio, !led->light_state);
 		led->timer_counter = led->inactive_interval;
 		led->state = 0;
 	} else  {
-		gpio_set_value(led->gpio, 1);
+		gpio_set_value(led->gpio, led->light_state);
 		led->timer_counter = led->active_interval;
 		if (led->blink_counter > 1)
 			led->blink_counter--;
@@ -41,10 +41,11 @@ static void led_timer_handler(void *arg)
  * Register new led
  * @param led - struct allocated not in stack with one necessary parameter: gpio
  */
-void led_register(struct led *led, struct gpio *gpio)
+void led_register(struct led *led, struct gpio *gpio, bool light_state)
 {
     led->gpio = gpio;
-	gpio_set_value(gpio, 0);
+    led->light_state = light_state;
+	gpio_set_value(gpio, !light_state);
 	led->blink_counter = 0;
 	led->active_interval = 0;
 	led->inactive_interval = 0;
@@ -60,12 +61,12 @@ void led_register(struct led *led, struct gpio *gpio)
  */
 void led_on(struct led *led)
 {
-	gpio_set_value(led->gpio, ON);
     cli();
 	led->active_interval = 0;
 	led->inactive_interval = 0;
-	led->blink_counter = 0;
+	led->timer_counter = 0;
 	sei();
+    gpio_set_value(led->gpio, led->light_state);
 }
 
 /**
@@ -73,12 +74,12 @@ void led_on(struct led *led)
  */
 void led_off(struct led *led)
 {
-	gpio_set_value(led->gpio, OFF);
     cli();
 	led->active_interval = 0;
 	led->inactive_interval = 0;
-	led->blink_counter = 0;
+	led->timer_counter = 0;
     sei();
+    gpio_set_value(led->gpio, !led->light_state);
 }
 
 /**
@@ -94,13 +95,13 @@ void led_set_blink(struct led *led, t_counter active_interval,
 	if(inactive_interval == 0)
 	    inactive_interval = active_interval;
 
-	gpio_set_value(led->gpio, 1);
 	cli();
 	led->active_interval = active_interval / 10 + 1;
 	led->inactive_interval = inactive_interval / 10 + 1;
-	led->blink_counter = active_interval;
+	led->timer_counter = led->active_interval;
 	led->blink_counter = blink_count ? (blink_count + 1) : 0;
 	sei();
+    gpio_set_value(led->gpio, led->light_state);
 }
 
 

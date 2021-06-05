@@ -109,7 +109,7 @@ static int motor_start(void)
 
     led_indicator_set_state(LI_STARTING_FIRST);
 
-    TIMEOUT(1000) {
+    TIMEOUT(3000) {
         if (handle_high_pressure())
             return 0;
         wdt_reset();
@@ -123,24 +123,25 @@ static int motor_start(void)
         if (is_timeout_expire(&start_timeout)) {
             motor_stop();
             valve_close();
+            led_indicator_set_state(LI_STARTING_SECOND);
             printf("Can't start motor\r\n");
-            TIMEOUT(10000) {
-                if (handle_high_pressure())
-                    return 0;
-                wdt_reset();
-            }
 
             attempts --;
             if (attempts == 0) {
                 return -1;
             }
-
             printf("attempts = %d\r\n",
                     MOTOR_START_ATTEMPTS_CNT - attempts);
+
+            TIMEOUT(60000) {
+                if (handle_high_pressure())
+                    return 0;
+                wdt_reset();
+            }
+
             timeout_start(&start_timeout, MOTOR_ROTATE_TIMEOUT);
             valve_open();
             motor_run();
-            led_indicator_set_state(LI_STARTING_SECOND);
         }
 
         if (handle_high_pressure()) {

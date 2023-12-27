@@ -61,12 +61,12 @@ static bool is_motor_running(void)
 
 static void valve_open(void)
 {
-    gpio_set_value(gpio_list + MCU_GPIO_VALVE, 0);
+    gpio_set_value(gpio_list + MCU_GPIO_VALVE, 1);
 }
 
 static void valve_close(void)
 {
-    gpio_set_value(gpio_list + MCU_GPIO_VALVE, 1);
+    gpio_set_value(gpio_list + MCU_GPIO_VALVE, 0);
 }
 
 static void debug_console(void)

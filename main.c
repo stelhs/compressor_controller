@@ -84,6 +84,12 @@ static void debug_console(void)
 static int handle_high_pressure(void)
 {
     if (is_high_pressure() && is_motor_running()) {
+        TIMEOUT(1000) {
+            wdt_reset();
+        }
+        if (!is_high_pressure())
+            return 0;
+
         printf("high pressure, stoped\r\n");
         motor_stop();
         valve_close();
@@ -99,7 +105,7 @@ static int handle_high_pressure(void)
 
 static int motor_start(void)
 {
-    #define MOTOR_ROTATE_TIMEOUT 3000
+    #define MOTOR_ROTATE_TIMEOUT 7000
     #define MOTOR_START_ATTEMPTS_CNT 5
 
     static struct timeout start_timeout;
@@ -109,7 +115,7 @@ static int motor_start(void)
 
     led_indicator_set_state(LI_STARTING_FIRST);
 
-    TIMEOUT(3000) {
+    TIMEOUT(15000) {
         if (handle_high_pressure())
             return 0;
         wdt_reset();

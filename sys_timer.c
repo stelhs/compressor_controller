@@ -81,7 +81,7 @@ bool is_timeout_expire(struct timeout *tmo)
 {
     bool expire;
     cli();
-    expire = (tmo->cnt == 1);
+    expire = (tmo->cnt <= 1);
     sei();
     return expire;
 }

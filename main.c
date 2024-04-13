@@ -11,6 +11,7 @@ volatile bool motor_rotate_freq = 0;
 volatile int timer_sec_cnt = 0;
 bool motor_enabled = 0;
 struct sys_timer sys_timer;
+struct timeout stop_tmo = {LIST_INIT, 1};
 
 static bool is_high_pressure(void)
 {
@@ -52,6 +53,7 @@ static void motor_stop(void)
 {
     gpio_set_value(gpio_list + MCU_GPIO_MOTOR, 0);
     motor_enabled = 0;
+    timeout_start(&stop_tmo, 20000);
 }
 
 static bool is_motor_running(void)
@@ -115,11 +117,11 @@ static int motor_start(void)
 
     led_indicator_set_state(LI_STARTING_FIRST);
 
-    TIMEOUT(15000) {
-        if (handle_high_pressure())
-            return 0;
+    while (!is_timeout_expire(&stop_tmo)) {
         wdt_reset();
     }
+
+    printf("motor start!\r\n");
 
     timeout_start(&start_timeout, MOTOR_ROTATE_TIMEOUT);
     motor_run();
@@ -174,7 +176,15 @@ int main(void)
     sys_timer_add_handler(&sys_timer);
 
     printf("Init - ok\r\n");
-    led_indicator_set_state(LI_WAITING);
+    led_indicator_set_state(LI_STARTING_FIRST);
+
+    TIMEOUT(15000) {
+        wdt_reset();
+    }
+
+    if (is_high_pressure()) {
+        led_indicator_set_state(LI_WAITING);
+    }
 
     for (;;) {
         wdt_reset();

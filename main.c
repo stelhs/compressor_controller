@@ -25,6 +25,7 @@ void sys_timer_cb(void *priv)
     if (timer_sec_cnt >= 1000) {
         timer_sec_cnt = 0;
         motor_rotate_freq = rotate_cnt;
+        printf("rotate_freq: %d\r\n", motor_rotate_freq);
         rotate_cnt = 0;
     }
 }
@@ -37,7 +38,7 @@ void gpio_int0_cb(void)
 
 static bool is_motor_rotate(void)
 {
-    if (motor_rotate_freq < 25)
+    if (motor_rotate_freq < 10)
         return FALSE;
     return TRUE;
 }
@@ -107,7 +108,7 @@ static int handle_high_pressure(void)
 
 static int motor_start(void)
 {
-    #define MOTOR_ROTATE_TIMEOUT 7000
+    #define MOTOR_ROTATE_TIMEOUT 9000
     #define MOTOR_START_ATTEMPTS_CNT 5
 
     static struct timeout start_timeout;
